@@ -18,10 +18,15 @@ package com.example.unscramble.ui
 /**
  * Data class that represents the game UI state
  */
-data class GameUiState(
-    val currentScrambledWord: String = "",
-    val currentWordCount: Int = 1,
-    val score: Int = 0,
-    val isGuessedWordWrong: Boolean = false,
-    val isGameOver: Boolean = false
-)
+sealed class GameUiState{
+    data object Initial : GameUiState()
+    data class InProgress(
+        val currentScrambledWord: String,
+        var currentWordCount: Int,
+        val score: Int,
+        val isGuessedWordWrong: Boolean,
+        val isGameOver: Boolean
+    ) : GameUiState()
+}
+
+

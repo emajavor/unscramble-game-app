@@ -71,8 +71,7 @@ class GameViewModel : ViewModel() {
         if (userGuess.equals(currentWord, ignoreCase = true)) {
             // User's guess is correct, increase the score
             // and call updateGameState() to prepare the game for next round
-            val updatedScore = _uiState.value.score.plus(SCORE_INCREASE)
-            updateGameState(updatedScore)
+            notifyCorrectGuessAndContinue(false)
         } else {
             // User's guess is wrong, show an error
             _uiState.update { currentState ->
@@ -87,7 +86,7 @@ class GameViewModel : ViewModel() {
      * Skip to next word
      */
     fun skipWord() {
-        updateGameState(_uiState.value.score)
+        notifyCorrectGuessAndContinue(true)
         // Reset user guess
         updateUserGuess("")
     }
@@ -96,7 +95,11 @@ class GameViewModel : ViewModel() {
      * Picks a new currentWord and currentScrambledWord and updates UiState according to
      * current game state.
      */
-    private fun updateGameState(updatedScore: Int) {
+    private fun notifyCorrectGuessAndContinue(skip: Boolean) {
+        var updatedScore = _uiState.value.score
+        if (!skip) {
+            updatedScore = _uiState.value.score.plus(SCORE_INCREASE)
+        }
         if (usedWords.size == MAX_NO_OF_WORDS){
             //Last round in the game, update isGameOver to true, don't pick a new word
             _uiState.update { currentState ->
@@ -112,7 +115,7 @@ class GameViewModel : ViewModel() {
                 currentState.copy(
                     isGuessedWordWrong = false,
                     currentScrambledWord = pickRandomWordAndShuffle(),
-                    currentWordCount = currentState.currentWordCount.inc(),
+                    currentWordCount = currentState.currentWordCount++,
                     score = updatedScore
                 )
             }
@@ -130,13 +133,11 @@ class GameViewModel : ViewModel() {
     }
 
     private fun pickRandomWordAndShuffle(): String {
-        // Continue picking up a new random word until you get one that hasn't been used before
+        val availableWords = allWords.filter { !usedWords.contains(it) }
+
         currentWord = allWords.random()
-        return if (usedWords.contains(currentWord)) {
-            pickRandomWordAndShuffle()
-        } else {
-            usedWords.add(currentWord)
-            shuffleCurrentWord(currentWord)
-        }
+        usedWords.add(currentWord)
+        return shuffleCurrentWord(currentWord)
+
     }
 }
